@@ -1,0 +1,22 @@
+{
+  "name": "firstlastfrostwebsite",
+  "version": "1.0.0",
+  "description": "works out the first frost in your area",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simoncoop1/FirstLastFrostWebsite.git"
+  },
+  "author": "Simon Cooper",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/simoncoop1/FirstLastFrostWebsite/issues"
+  },
+  "homepage": "https://github.com/simoncoop1/FirstLastFrostWebsite#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
