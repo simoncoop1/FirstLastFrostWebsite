@@ -2,6 +2,7 @@ import csv
 from pymongo import MongoClient
 import os
 from bson.son import SON
+from datetime import datetime
 
 
 class Connect(object):
@@ -64,15 +65,16 @@ for f in filesIncPath:
         areader = csv.reader(csvfile, delimiter=',',doublequote=False)
         dataMarkerFound = False
         dataColumnHeaderFound = False
-        station = {}
+        stationName = "undefined"
         print(f)
         for row in areader:            
             if row[0] == 'data':
                 dataMarkerFound = True
                 continue
             elif row[0] == 'observation_station':
-                station['observation_station'] = row[2]
-                station['data'] = []
+                #station['observation_station'] = row[2]
+                #station['data'] = []
+                stationName = row[2]
                 continue
             elif row[0] == 'end data':#end of data reached
                 continue
@@ -80,10 +82,17 @@ for f in filesIncPath:
                 dataColumnHeaderFound = True
                 continue
             elif dataMarkerFound and dataColumnHeaderFound:
-                station['data'].append({'ob_end_time':row[0],'ob_hour_count':row[3],'max_air_temp':row[8],'min_air_temp':row[9],'min_grss_temp':row[10],'min_conc_temp':row[11]})
+                station = {} 
+                station['observation_station'] = stationName
+                station['ob_end_time'] = datetime.fromisoformat(row[0])
+                station['ob_hour_count'] = float(row[3]) if row[3]!=  'NA' else None
+                station['max_air_temp'] = row[8]
+                station['min_air_temp'] = row[9]
+                station['min_grss_temp'] = row[10]
+                station['min_conc_temp'] = row[11]
+                obsv.append(station)
                 
                                     
-        obsv.append(station)
         #print(obsv)
         #break #temp
 
