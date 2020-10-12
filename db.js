@@ -13,10 +13,11 @@ client.connect(function(err) {
     const db = client.db('test');
 
     //findObservations(db,function(){
-        GetFirstYear(db,"",function(){
+    GetFirstYear(db,"",function(results){
+        LastYear(db,"",results['startdate'],function(){
             client.close();
         });
-    //});
+    });
 
 });
 
@@ -36,14 +37,29 @@ const GetFirstYear = function(db, station, callback){
     const collection = db.collection('observations');
 
     collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1}).next(function(err, docs){
-        var startDate = docs['ob_end_time'];        
-
-        console.log(startDate);
-        console.log(startDate.getMonth());
-        callback(docs)    
-    })
+        let startDate = docs['ob_end_time'];                        
+        console.log(`the first date is ${startDate.toJSON()}`);
+        callback(startDate)    
+    });
     
 }
+
+const LastYear = function(db,station,results,callback){
+
+    const collection = db.collection('observations');
+    collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":-1}).next(function(err, docs){
+        let endDate  = docs['ob_end_time'];                        
+        console.log(`the last date is ${endDate.toJSON()}`);
+        callback(endDate);   
+    });
+};
+
+const createYearArray = function(db,station,results,callback){
+}
+
+const createFirstLastFrostDictionaryArray = function(){
+}
+
 
 //db.observations.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1})
 
