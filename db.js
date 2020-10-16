@@ -17,8 +17,11 @@ client.connect(function(err) {
     /*findObservations(db,function(){
         client.close();
     });*/
+   /* getDateRangeDataCoverate(db,1984,"berriedale-langwell",0.8 ,function(){
+        client.close();
+    });*/
     
-    GetFirstYear(db,env, function(env){
+    /*GetFirstYear(db,env, function(env){
         LastYear(db,env, function(env){
             CreateYearArray(db,env, function(env){
                 createFirstLastFrostDictionaryArray(db,env, function(env){
@@ -26,7 +29,13 @@ client.connect(function(err) {
                 });
             });
         });
-    });
+    });*/
+
+      const collection = db.collection('observations');
+      // Find some documents
+      collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1}).toArray()
+        .then(() => {console.log("ok");})
+                .then(() => {console.log("ok2");});
 
 });
 
@@ -76,7 +85,7 @@ const GetStationNames = function(db,callback){
     });
 }
 
-const CreateYearArray = function(db,env,callback){
+const CreateYearArray =  async function(db,env,callback){
     //we are looking for full years 1-jul-year1/30-jun-year2
     //that way the first and last fost is calculated from this range
     //this makes sense because it covers autumn,winter,spring, the seasons
@@ -95,7 +104,27 @@ const CreateYearArray = function(db,env,callback){
     let theYears = range(endYear-startYear,startYear);
     env['years'] = theYears;
     console.log(env['years']);
+
+
+    //must check that a year contains enough records to be useful
+
     callback(env);
+}
+
+//want to have data for a complete year
+const getDateRangeDataCoverate = function(db, year,station,threshhold,env, callback){
+    const collection = db.collection('observations');
+    collection.aggregate([{'$group':{'_id':'stuff','hourOfObservation':{'$sum':{'$cond':{'if':{'$and':[{'$lt':['$ob_end_time',new Date('1983-06-30')]},{'$gte':['$ob_end_time',new Date('1982-07-01')]},{'$eq':['$observation_station','berriedale-langwell']}]},then:'$ob_hour_count',else:0}}}}}]).next(function(er,docs){
+        console.log(JSON.stringify(docs));
+        let hours = docs['hourOfObservation'];
+        if((hours / (365*24))>= threshhold)
+        {
+            callback(true);
+        }
+        else{
+            callback(false);
+        }
+    });
 }
 
 const createFirstLastFrostDictionaryArray = function(db,env,callback){
@@ -105,7 +134,7 @@ const createFirstLastFrostDictionaryArray = function(db,env,callback){
     let year = env['years'].pop();
 
     if(year == undefined){
-        console.log(JSON.stringify(env));
+        //console.log(JSON.stringify(env));
         callback(env);
     }
     else{
@@ -114,9 +143,9 @@ const createFirstLastFrostDictionaryArray = function(db,env,callback){
         collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell",
         "ob_end_time":{"$lt":new Date(`${year+1}-07-01T00:00:00Z`),"$gte":new Date(`${year}-07-01T00:00:00Z`)}})
             .sort({"ob_end_time":1}).next(function(err, docs){
-                console.log("test");
+                //console.log("test");
                 assert.equal(err, null);
-                console.log(`the first frost ${docs['ob_end_time']}`);
+                //console.log(`the first frost ${docs['ob_end_time']}`);
                 //console.log(JSON.stringify(docs));
                 //console.log(JSON.stringify(env));
                 env['firstFrost'].push({"year":year,"document":docs});
