@@ -17,10 +17,18 @@ client.connect(function(err) {
     /*findObservations(db,function(){
         client.close();
     });*/
-   /* getDateRangeDataCoverate(db,1984,"berriedale-langwell",0.8 ,function(){
-        client.close();
-    });*/
+    /*getDateRangeDataCoverate(db,"berriedale-langwell",0.8 ,env['years'],env)
+        .then((resolve) => {
+            console.log(resolve);
+            client.close();
+        }).catch((err)=> console.log("there is a problem"+err));*/
     
+    GetFirstYearQuery(db)
+        .then(resolve => GetFirstYearHandler(db,resolve['ob_end_time'],env))
+        .then(resolve => {console.log('wow');
+                          client.close()})
+        .catch(err => console.log(`the is an error ${er}`));
+
     /*GetFirstYear(db,env, function(env){
         LastYear(db,env, function(env){
             CreateYearArray(db,env, function(env){
@@ -31,11 +39,11 @@ client.connect(function(err) {
         });
     });*/
 
-      const collection = db.collection('observations');
+      //const collection = db.collection('observations');
       // Find some documents
-      collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1}).toArray()
-        .then(() => {console.log("ok");})
-                .then(() => {console.log("ok2");});
+      //collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1}).toArray()
+      //  .then(() => {console.log("ok");})
+      //          .then(() => {console.log("ok2");});
 
 });
 
@@ -51,16 +59,24 @@ const findObservations = function(db, callback) {
   });
 }
 
-const GetFirstYear = function(db,env,callback){
+const GetFirstYearQuery = function(db){
     const collection = db.collection('observations');
-
+    return collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1}).next()
+     
+    /*
     collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1}).next(function(err, docs){
         env['startDate'] = docs['ob_end_time'];
         let startDate = env['startDate'];
         console.log(`the first date is ${startDate.toJSON()}`);
         callback(env)    
-    });
+    });*/
     
+}
+
+const GetFirstYearHandler = (db,startDate,env) => {
+    env['startDate'] = startDate;
+    console.log(JSON.stringify(startDate));
+    return env;
 }
 
 const LastYear = function(db,env,callback){
@@ -85,7 +101,7 @@ const GetStationNames = function(db,callback){
     });
 }
 
-const CreateYearArray =  async function(db,env,callback){
+const CreateYearArray =  function(db,env,callback){
     //we are looking for full years 1-jul-year1/30-jun-year2
     //that way the first and last fost is calculated from this range
     //this makes sense because it covers autumn,winter,spring, the seasons
@@ -112,8 +128,21 @@ const CreateYearArray =  async function(db,env,callback){
 }
 
 //want to have data for a complete year
-const getDateRangeDataCoverate = function(db, year,station,threshhold,env, callback){
-    const collection = db.collection('observations');
+const getDateRangeDataCoverate = (db,station,threshhold,years,env)=>{
+    /*const collection = db.collection('observations');
+
+    return new Promise(resolve => {
+     
+    let hourCountEachYear = [];
+    [1983,1984].forEach(x => {
+        hourCountEachYear.push(new Promise(collection.aggregate([{'$group':{'_id':station,'hourOfObservation':{'$sum':{'$cond':{'if':{'$and':[{'$lt':['$ob_end_time',new Date('1983-06-30')]},{'$gte':['$ob_end_time',new Date('1982-07-01')]},{'$eq':['$observation_station','berriedale-langwell']}]},then:'$ob_hour_count',else:0}}}}}]).next));});
+    
+    return Promise.all(hourCountEachYear)
+    });
+
+*/
+
+   /* const collection = db.collection('observations');
     collection.aggregate([{'$group':{'_id':'stuff','hourOfObservation':{'$sum':{'$cond':{'if':{'$and':[{'$lt':['$ob_end_time',new Date('1983-06-30')]},{'$gte':['$ob_end_time',new Date('1982-07-01')]},{'$eq':['$observation_station','berriedale-langwell']}]},then:'$ob_hour_count',else:0}}}}}]).next(function(er,docs){
         console.log(JSON.stringify(docs));
         let hours = docs['hourOfObservation'];
@@ -124,8 +153,31 @@ const getDateRangeDataCoverate = function(db, year,station,threshhold,env, callb
         else{
             callback(false);
         }
-    });
-}
+    });*/
+
+    const collection = db.collection('observations');
+    return Promise.all([1984,1983].map(x => {
+        const promise1 = collection.aggregate([
+        {'$group':
+            {'_id':station
+                ,'hourOfObservation':{'$sum':{'$cond':{'if':
+                    {'$and':
+                        [{'$lt':['$ob_end_time',new Date(`${x+1}-06-30`)]}
+                            ,{'$gte':['$ob_end_time',new Date(`${x}-07-01`)]}
+                            ,{'$eq':['$observation_station','berriedale-langwell']}]}
+                    ,then:'$ob_hour_count'
+                    ,else:0
+                }}}}}
+            ,{'$project':{hourOfObservation:1,year:JSON.stringify(x)}},{'$match':{hourOfObservation:{'$gt':6820}}}
+        ])
+            .next();
+        return promise1;
+    }));
+
+/*    const promise1 = collection.aggregate([{'$group':{'_id':'stuff','hourOfObservation':{'$sum':{'$cond':{'if':{'$and':[{'$lt':['$ob_end_time',new Date('1983-06-30')]},{'$gte':['$ob_end_time',new Date('1982-07-01')]},{'$eq':['$observation_station','berriedale-langwell']}]},then:'$ob_hour_count',else:0}}}}}]).next();
+    return promise1;*/
+  
+};
 
 const createFirstLastFrostDictionaryArray = function(db,env,callback){
 
