@@ -12,41 +12,7 @@ client.connect(function(err) {
 
     const db = client.db('test');
 
-    //[{"station_file_name":"berriedale-langwell"},{"station_file_name":"foula"}]
-
-    StationNamesQuery(db)
-        .then((stations) => {
-            let promises =stations.map(doc => {
-                let env = {"firstFrost":[],"lastFrost":[],"stationName":doc['station_file_name'],"db":db,"dateCoverMin":0.8};
-                let forAStation = GetFirstYearQuery(env)
-                    .then(resolve => GetFirstYearHandler(resolve,env))
-                    .then(resolve => LastYearQuery(env))
-                    .then(resolve => LastYearHandler(resolve,env))
-                    .then(resolve => CreateYearArrayQuery(env))
-                    .then(resolve => CreateYearArrayHandler(env))
-                    .then(resolve => DateRangeDataCoverQuery(env))
-                    .then(resolve => DateRangeDataCoverHandler(resolve,env))
-                    .then(resolve => FirstFrostTableQuery(env))
-                    .then(resolve => FirstFrostTableHandler(resolve,env))
-                    .then(resolve => LastFrostTableQuery(env))
-                    .then(resolve => LastFrostTableHandler(resolve,env))
-                    .then(resolve => PrintResult(env))
-                    .then(resolve => AddDB(env))
-
-                return forAStation;
-            });
-            return Promise.all(promises);
-        })
-        .then(resolve => client.close())
-        .catch(err => console.error(`the is an error ${err} ${err.stack}`));
-
-
-
-    /*
-        let env = {"firstFrost":[],"lastFrost":[],"stationName":"foula","db":db,"dateCoverMin":0.8};
-
-
-
+    let env = {"firstFrost":[],"lastFrost":[],"stationName":"berriedale-langwell","db":db,"dateCoverMin":0.8};
 
     GetFirstYearQuery(env)
         .then(resolve => GetFirstYearHandler(resolve,env))
@@ -62,12 +28,11 @@ client.connect(function(err) {
         .then(resolve => LastFrostTableHandler(resolve,env))
         .then(resolve => PrintResult(env))
         .then(resolve => client.close())
-        .catch(err => console.error(`the is an error ${err} ${err.stack}`));*/
+        .catch(err => console.error(`the is an error ${err} ${err.stack}`));
 
 });
 
-
-/*const findObservations = function(db, callback) {
+const findObservations = function(db, callback) {
   // Get the documents collection
   const collection = db.collection('observations');
   // Find some documents
@@ -77,12 +42,11 @@ client.connect(function(err) {
     console.log(docs)
     callback(docs);
   });
-}*/
+}
 
 const GetFirstYearQuery = function(env){
     const collection = env['db'].collection('observations');
-    const station = env['stationName'];
-    return collection.find({"min_air_temp":{"$lte":0},"observation_station":station}).sort({"ob_end_time":1}).next()
+    return collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"}).sort({"ob_end_time":1}).next()
 }
 
 const GetFirstYearHandler = (doc,env) => {
@@ -93,8 +57,7 @@ const GetFirstYearHandler = (doc,env) => {
 
 const LastYearQuery = env =>{
     const collection = env['db'].collection('observations');
-    const station = env['stationName'];
-    return collection.find({"min_air_temp":{"$lte":0},"observation_station":station})
+    return collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell"})
         .sort({"ob_end_time":-1}).next();
 };
 
@@ -104,13 +67,15 @@ const LastYearHandler = (doc,env) => {
         return env;
 }
 
-const StationNamesQuery = function(db){
+const GetStationNames = function(db,callback){
     const collection = db.collection('stations');
-    return collection.find().project({"station_file_name" :1}).toArray()
-}
-
-const StationNamesHander = (doc,env) => {
-
+    collection.find().project({"station_name" :1}).each(function(err,doc){
+        if(doc){
+        } else{
+            //each will keep getting docs until none left of query, and then
+            //this else block is run.
+        }
+    });
 }
 
 const CreateYearArrayQuery = db => {
@@ -153,7 +118,7 @@ const DateRangeDataCoverQuery = (env)=>{
                     {'$and':
                         [{'$lt':['$ob_end_time',new Date(`${x+1}-06-30`)]}
                             ,{'$gte':['$ob_end_time',new Date(`${x}-07-01`)]}
-                            ,{'$eq':['$observation_station',station]}]}
+                            ,{'$eq':['$observation_station','berriedale-langwell']}]}
                     ,then:'$ob_hour_count'
                     ,else:0
                 }}}}}
@@ -178,12 +143,11 @@ const DateRangeDataCoverHandler = (resolve,env)=>{
 
 const FirstFrostTableQuery =  function(env){
     const collection = env['db'].collection('observations');
-    const years = env['filteredYears'];
-    const station = env['stationName'];
+    const years = env['filtererdYears']
     console.log(`firstfronttablequery ${env['filteredYears']}`);
     
-    return Promise.all(years.map(x => {
-        const promise1 = collection.find({"min_air_temp":{"$lte":0},"observation_station":station,
+    return Promise.all([1983].map(x => {
+        const promise1 = collection.find({"min_air_temp":{"$lte":0},"observation_station":"berriedale-langwell",
             "ob_end_time":{"$lt":new Date(`${x+1}-07-01T00:00:00Z`),"$gte":new Date(`${x}-07-01T00:00:00Z`)}})
             .sort({"ob_end_time":1}).next();
         return promise1;
@@ -192,7 +156,7 @@ const FirstFrostTableQuery =  function(env){
 
 const FirstFrostTableHandler = (doc,env) =>{
     console.log("FirstFrostTableHandler");
-	//console.log(JSON.stringify(doc));
+	console.log(JSON.stringify(doc));
 	//console.log("test");
 	//assert.equal(err, null);
     doc.forEach((x,indx) =>{
@@ -203,11 +167,10 @@ const FirstFrostTableHandler = (doc,env) =>{
 
 const LastFrostTableQuery =  function(env){
     const collection = env['db'].collection('observations');
-    const years = env['filteredYears'];
-    const station = env['stationName'];
+    const years = env['filteredYears']
     return Promise.all(years.map(year => {
         const promise1 = collection.find({"min_air_temp":{"$lte":0},
-            "observation_station":station,
+            "observation_station":"berriedale-langwell",
             "ob_end_time":{"$lt":new Date(`${year+1}-07-01T00:00:00Z`),"$gte":new Date(`${year}-07-01T00:00:00Z`)}})
             .sort({"ob_end_time":-1}).next();
         return promise1
@@ -217,24 +180,17 @@ const LastFrostTableQuery =  function(env){
 const LastFrostTableHandler = (doc,env) =>{
     //assert.equal(err,null);
     doc.forEach((x,indx) =>{
-        env['lastFrost'].push({year:env['filteredYears'][indx],"station_file_name":env['stationName'],"document":x});
+        env['lastFrost'].push({year:env['filteredYears'][indx],"document":x});
     });
     return env['filteredYears'];
 }
 
+
+
+
 const PrintResult = (env) => {
     console.log(`last frost ${JSON.stringify(env['lastFrost'])}`);
     console.log(`first frost ${JSON.stringify(env['firstFrost'])}`);
-}
-
-const AddDB = (env) => {
-    const collection = env['db'].collection('firstFrost');
-    const promise1 =  collection.insertMany(env['firstFrost']);
-
-    const collection2 = env['db'].collection('lastFrost');
-    const promise2 = collection2.insertMany(env['lastFrost']);
-
-    return Promise.all([promise1,promise2])
 }
 
 function range(size, startAt = 0) {
