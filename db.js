@@ -40,30 +40,6 @@ client.connect(function(err) {
         .then(resolve => client.close())
         .catch(err => console.error(`the is an error ${err} ${err.stack}`));
 
-
-
-    /*
-        let env = {"firstFrost":[],"lastFrost":[],"stationName":"foula","db":db,"dateCoverMin":0.8};
-
-
-
-
-    GetFirstYearQuery(env)
-        .then(resolve => GetFirstYearHandler(resolve,env))
-        .then(resolve => LastYearQuery(env))
-        .then(resolve => LastYearHandler(resolve,env))
-        .then(resolve => CreateYearArrayQuery(env))
-        .then(resolve => CreateYearArrayHandler(env))
-        .then(resolve => DateRangeDataCoverQuery(env))
-        .then(resolve => DateRangeDataCoverHandler(resolve,env))
-        .then(resolve => FirstFrostTableQuery(env))
-        .then(resolve => FirstFrostTableHandler(resolve,env))
-        .then(resolve => LastFrostTableQuery(env))
-        .then(resolve => LastFrostTableHandler(resolve,env))
-        .then(resolve => PrintResult(env))
-        .then(resolve => client.close())
-        .catch(err => console.error(`the is an error ${err} ${err.stack}`));*/
-
 });
 
 
@@ -107,10 +83,6 @@ const LastYearHandler = (doc,env) => {
 const StationNamesQuery = function(db){
     const collection = db.collection('stations');
     return collection.find().project({"station_file_name" :1}).toArray()
-}
-
-const StationNamesHander = (doc,env) => {
-
 }
 
 const CreateYearArrayQuery = db => {

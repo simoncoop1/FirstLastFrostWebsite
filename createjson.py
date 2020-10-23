@@ -101,7 +101,9 @@ def observations():
 
     db.observations.insert_many(obsv)
         
-
+#for an observation get last year that goes to end of june,
+# and first year that has july
+def startAndEndYear(stationName):
 
 
 
