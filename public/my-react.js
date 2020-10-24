@@ -1,3 +1,5 @@
+var React = require('react');
+
 
 
 class Observations extends React.Component{
@@ -32,7 +34,7 @@ class MyFooter extends React.Component{
         return (
             <footer className="footer mt-auto py-3">
               <div className="container">
-                <span className="text-muted">Place sticky footer content here.</span>
+                <span className="text-muted">My Project Footer</span>
               </div>
             </footer>
 

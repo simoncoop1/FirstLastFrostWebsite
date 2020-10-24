@@ -2,9 +2,10 @@
   "name": "firstlastfrostwebsite",
   "version": "1.0.0",
   "description": "works out the first frost in your area",
-  "main": "app.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,18 @@
   "homepage": "https://github.com/simoncoop1/FirstLastFrostWebsite#readme",
   "dependencies": {
     "assert": "^2.0.0",
+    "bootstrap": "^4.5.3",
     "express": "^4.17.1",
-    "mongodb": "^3.6.2"
+    "jquery": "^3.5.1",
+    "lodash": "^4.17.20",
+    "mongodb": "^3.6.2",
+    "popper": "^1.0.1",
+    "react-select": "^3.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "babel-loader": "^8.1.0",
+    "webpack": "^5.2.0",
+    "webpack-cli": "^4.1.0"
   }
 }
