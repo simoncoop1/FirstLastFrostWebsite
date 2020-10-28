@@ -1,6 +1,3 @@
-var React = require('react');
-
-
 
 class Observations extends React.Component{
     constructor(props){
