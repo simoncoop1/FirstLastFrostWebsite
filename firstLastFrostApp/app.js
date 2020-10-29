@@ -14,6 +14,10 @@ app.get("/url", (req, res, next) => {
     res.json(["this","is","my","test","server"]);
 });
 
+app.get("/placeNameSearch", (req, res, next) => {
+    res.json(["this","is","my","test","server"]);
+});
+
 app.listen(3004, () => {
          console.log("Server running on port 3004");
 });
